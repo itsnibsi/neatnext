@@ -118,8 +118,7 @@ configure_prettier() {
     jq --argjson new_config "$prettierrc_json" '. + $new_config' "$prettierrc_path" > "$prettierrc_path.tmp"
     mv "$prettierrc_path.tmp" "$prettierrc_path"
   else
-    echo "Error: Couldn't configure prettier."
-    return 1
+    echo "$prettierrc_json" > "$prettierrc_path"
   fi
 }
 
