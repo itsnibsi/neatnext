@@ -125,7 +125,7 @@ configure_prettier() {
 configure_package() {
   local package_path="package.json"
   if [ -e "$package_path" ]; then
-    jq '.scripts.dev = "NODE_OPTIONS='"'"'--inspect'"'"' " + .scripts.dev' "$package_path" > "$package_path.tmp"
+    jq '.scripts.dev = "NODE_OPTIONS='"'"'--inspect'"'"' next dev"' "$package_path" > "$package_path.tmp"
     mv "$package_path.tmp" "$package_path"
   else
     echo "Error: $package_path does not exist."
