@@ -26,23 +26,23 @@ detect_package_manager() {
     echo "unknown"
   fi
 }
-
 current_package_manager=$(detect_package_manager)
 
 install_packages() {
-  dependencies=( "@typescript-eslint/parser" "@typescript-eslint/eslint-plugin" "eslint-config-prettier" "eslint-plugin-prettier" "eslint-plugin-tailwindcss" "@tailwindcss/forms" )
+  dev_dependencies=( "@typescript-eslint/parser" "@typescript-eslint/eslint-plugin" "eslint-config-prettier" "eslint-plugin-prettier" "eslint-plugin-tailwindcss" "@tailwindcss/forms" )
 
   case $current_package_manager in
     "npm")
-      npm install --save-dev "${dependencies[@]}"
+      npm install --save-dev "${dev_dependencies[@]}"
       ;;
     "yarn")
-      yarn add --dev "${dependencies[@]}"
+      yarn add --dev "${dev_dependencies[@]}"
       ;;
     "pnpm")
-      pnpm add -D "${dependencies[@]}"
+      pnpm add -D "${dev_dependencies[@]}"
       ;;
   esac
+
 }
 
 # Path variables
@@ -168,8 +168,21 @@ EOF
   fi
 }
 
+configure_typescript() {
+  local tsconfig_path="tsconfig.json"
+  if [ -e "$tsconfig_path" ]; then
+    jq '.compilerOptions["paths"]["@/*"] = ["./src/*"]' "$tsconfig_path" > "$tsconfig_path.tmp"
+    mv "$tsconfig_path.tmp" "$tsconfig_path"
+  else
+    echo "Error: $tsconfig_path does not exist."
+    return 1
+  fi
+}
+
 tidy_nextjs_app() {
   local dir_name=$(basename "$PWD")
+
+  mkdir src
 
   sed -i '4,$ d' app/globals.css
   sed -i "s/title: .*/title: { default: '$dir_name', template: '%s | $dir_name' },/" app/layout.tsx
@@ -179,6 +192,18 @@ export default function Page() {
   return <h1>${dir_name}</h1>
 }
 EOF
+  cat > tailwind.config.ts <<EOF
+import type { Config } from 'tailwindcss'
+const config: Config = {
+  content: ['./src/components/**/*.{js,ts,jsx,tsx,mdx}', './src/app/**/*.{js,ts,jsx,tsx,mdx}'],
+  theme: {},
+  plugins: [],
+}
+export default config
+EOF
+  mv components src
+  mv app src
+  $current_package_manager lint --fix
 }
 
 # Main execution starts here
@@ -188,5 +213,6 @@ if check_dependencies; then
   configure_eslint
   configure_prettier
   configure_vscode
+  configure_typescript
   tidy_nextjs_app
 fi
