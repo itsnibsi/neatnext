@@ -83,9 +83,6 @@ configure_eslint() {
       }],
       "tailwindcss/enforces-shorthand": "error",
       "react/jsx-sort-props": ["error"]
-    } |
-    .settings = {
-      "tailwindcss": {"callees": ["cn"]}
     }
   ' "$eslintrc_path" > "$eslintrc_path.tmp"
   mv "$eslintrc_path.tmp" "$eslintrc_path"
